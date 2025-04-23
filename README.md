@@ -15,6 +15,9 @@ For illustration how to use it, benchmarking code is included in [bench.c](./ben
 It performs `NTESTS=500` experiments. Each experiment first runs `NWARMUP=50` iterations of the 
 target functions for the purpose of cache warming and then measures `NITERATIONS=300` of the 
 target functions and stores the average cycle count.
+Those parameters have proven to work well on many platforms. If you see unstable benchmarks you can try to increase
+the number of iterations or tests.
+
 At the end the median run-time is printed alongside the percentiles:
 ```
 $ ./bench 
