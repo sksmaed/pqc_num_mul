@@ -1,4 +1,4 @@
-# Cross-platform benchmarking
+# Portable cycle-counting
 
 This repository contains a simple framework for benchmarking on various platforms.
 The hardware-abstraction layer (HAL) supports benchmarking using perf (any supported platform), PMU (AArch64, x86_64), and Apple's KPC (AArch64, x86_64).
