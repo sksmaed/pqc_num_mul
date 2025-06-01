@@ -12,9 +12,9 @@
 #include "../headers/test_data.h"
 #include "../headers/mul.h"
 
-#define NWARMUP 5
-#define NITERATIONS 30
-#define NTESTS 50
+#define NWARMUP 50
+#define NITERATIONS 300
+#define NTESTS 500
 #define N 384
 
 static int cmp_uint64_t(const void *a, const void *b)
@@ -136,7 +136,7 @@ static void bench_fnt(void) {
   print_percentiles("fnt", cycles);
 }*/
 
-static void bench_toom8(void) {
+static void bench_toom3(void) {
   uint16_t A[N], B[N], OUT[3072];
   memcpy(A, test_A, sizeof(A));
   memcpy(B, test_B, sizeof(B));
@@ -160,9 +160,9 @@ static void bench_toom8(void) {
   }
   
   qsort(cycles, NTESTS, sizeof(uint64_t), cmp_uint64_t);
-  print_median("fnt", cycles);
+  print_median("Toom-3", cycles);
   print_percentile_legend();
-  print_percentiles("fnt", cycles);
+  print_percentiles("Toom-3", cycles);
 }
 
 static void bench_gmp(void) {
@@ -206,7 +206,7 @@ int main(void)
   
   // bench();
   printf("== Toom-3 乘法測試 ==\n");
-  bench_toom8();
+  bench_toom3();
   printf("\n");
 
   printf("== GMP 乘法測試 ==\n");

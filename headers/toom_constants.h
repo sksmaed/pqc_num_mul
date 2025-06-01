@@ -4,7 +4,26 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-const int K = 6;
+#define P         12289
+#define R         65536
+#define BARRETT_V ((1U << 16) / P)
+#define DINV      10241 // D = 6
+#define MU_DINV   27307
+
+#define LIMB_PER_PART 128
+#define HALF 64
+#define PROD_LIMBS 256
+#define TOTAL_LIMBS   384
+#define NUM_PARTS     3
+#define NUM_EVALS     5
+#define RESULT_LIMBS  768
+#define COEFFS        5
+#define LIMB_SIZE      16
+#define BASE           (1 << LIMB_SIZE)
+#define LIMB_BITS      16
+#define HALF           64
+#define QUARTER        32
+
 const uint16_t x_powers[5][5] = {
     {1, -1, 1, -1, 1},
     {1, 0, 0, 0, 0},
@@ -12,11 +31,6 @@ const uint16_t x_powers[5][5] = {
     {1, 2, 4, 8, 16},
     {0, 0, 0, 0, 1}
 };
-const uint16_t P = 12289;
-const uint32_t R = 65536;
-const uint16_t mu_m1 = 32765;
-const uint16_t mu_1 = 2;
-const uint16_t mu_2 = 5;
 
 static const uint16_t inv_mat[5][5] = {
     { 0, 6, 0, 0, 0 },
@@ -33,9 +47,5 @@ static const uint16_t inv_mu[5][5] = {
     { 32765, 7, 32760, 2, 32736 },
     { 0, 0, 0, 0, 15 },
 };
-
-// D = 6
-static const uint16_t Dinv = 10241;
-const uint16_t mu_Dinv = 27307;
 
 #endif // TOOM_CONSTANTS_H

@@ -5,8 +5,6 @@
 #include <assert.h>
 #include <inttypes.h>
 #include "../headers/mul.h"
-#include "../headers/constant.h"
-#include "../headers/utils.h"
 
 void gmp_mul(size_t n_bytes, const void *in1, const void *in2, void *out) {
     mpz_t a, b, result;

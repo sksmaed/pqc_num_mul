@@ -50,7 +50,7 @@ endif
 all: $(TARGET)
 
 $(TARGET): $(SOURCES)
-	$(CC) $(CFLAGS) $(SOURCES) modmul_asm.o -o $(TARGET) -lgmp
+	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET) -lgmp
 
 clean:
 	-$(RM) -rf $(TARGET) *.d
