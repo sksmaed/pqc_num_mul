@@ -7,6 +7,7 @@ This repository is created for the implementation of large number multiplication
 Run the following commands:
 
 ```
+cd aarch64-bench
 make clean
 make CYCLE=PERF
 sudo ./bench
