@@ -7,11 +7,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "hal.h"
+#include "../headers/test_data.h"
+#include "../headers/mul.h"
 
 #define NWARMUP 50
 #define NITERATIONS 300
 #define NTESTS 500
+#define N 384
 
 static int cmp_uint64_t(const void *a, const void *b)
 {
@@ -47,11 +51,26 @@ static void print_percentiles(const char *txt, uint64_t cyc[NTESTS])
   printf("\n");
 }
 
+static bool check_correctness(void) {
+  uint16_t A[N], B[N], TOOM8_OUT[N * 2], GMP_OUT[N * 2];
+  memset(GMP_OUT, 0, sizeof(GMP_OUT));
+  memcpy(A, test_A, sizeof(A));
+  memcpy(B, test_B, sizeof(B));
+
+  toom3_mul_2048(TOOM8_OUT, A, B);
+  gmp_mul(N * sizeof(uint16_t), A, B, GMP_OUT);
+
+  for (int i = 0; i < 5; ++i) {
+    printf("limb %d: Toom3 = %d, GMP = %d\n",i, TOOM8_OUT[i], GMP_OUT[i]);
+  }
+  return true;
+}
+
 extern const int16_t zetas_layer12345[];
 extern const int16_t zetas_layer67[];
 void ntt_asm(int16_t *, const int16_t *, const int16_t *);
 
-static int bench(void)
+/*static int bench(void)
 {
   int16_t a[256] = {0};
   int i, j;
@@ -88,11 +107,110 @@ static int bench(void)
   return 0;
 }
 
+static void bench_fnt(void) {
+  uint64_t A[N], B[N], OUT[N];
+  memcpy(A, test_A, sizeof(A));
+  memcpy(B, test_B, sizeof(B));
+  
+  uint64_t cycles[NTESTS];
+  int i, j;
+  uint64_t t0, t1;
+  
+  //fnt_mul_2048limb(OUT, A, B);
+  for (i = 0; i < NTESTS; i++) {
+    for (j = 0; j < NWARMUP; j++) {
+      fnt_mul_2048limb(OUT, A, B);
+    }
+    
+    t0 = get_cyclecounter();
+    for (j = 0; j < NITERATIONS; j++) {
+      fnt_mul_2048limb(OUT, A, B);
+    }
+    t1 = get_cyclecounter();
+    cycles[i] = t1 - t0;
+  }
+  
+  qsort(cycles, NTESTS, sizeof(uint64_t), cmp_uint64_t);
+  print_median("fnt", cycles);
+  print_percentile_legend();
+  print_percentiles("fnt", cycles);
+}*/
+
+static void bench_toom3(void) {
+  uint16_t A[N], B[N], OUT[3072];
+  memcpy(A, test_A, sizeof(A));
+  memcpy(B, test_B, sizeof(B));
+  
+  uint64_t cycles[NTESTS];
+  int i, j;
+  uint64_t t0, t1;
+  
+  //fnt_mul_2048limb(OUT, A, B);
+  for (i = 0; i < NTESTS; i++) {
+    for (j = 0; j < NWARMUP; j++) {
+      toom3_mul_2048(OUT, A, B);
+    }
+    
+    t0 = get_cyclecounter();
+    for (j = 0; j < NITERATIONS; j++) {
+      toom3_mul_2048(OUT, A, B);
+    }
+    t1 = get_cyclecounter();
+    cycles[i] = t1 - t0;
+  }
+  
+  qsort(cycles, NTESTS, sizeof(uint64_t), cmp_uint64_t);
+  print_median("Toom-3", cycles);
+  print_percentile_legend();
+  print_percentiles("Toom-3", cycles);
+}
+
+static void bench_gmp(void) {
+  uint16_t A[N], B[N], OUT[N * 2]; // GMP 可能用到更大空間
+  memset(OUT, 0, sizeof(OUT));
+  memcpy(A, test_A, sizeof(A));
+  memcpy(B, test_B, sizeof(B));
+  //gmp_mul(N * sizeof(uint64_t), A, B, OUT);
+  
+  uint64_t cycles[NTESTS];
+  int i, j;
+  uint64_t t0, t1;
+  
+  for (i = 0; i < NTESTS; i++) {
+    for (j = 0; j < NWARMUP; j++) {
+      gmp_mul(N * sizeof(uint16_t), A, B, OUT);
+    }
+    
+    t0 = get_cyclecounter();
+    for (j = 0; j < NITERATIONS; j++) {
+      gmp_mul(N * sizeof(uint16_t), A, B, OUT);
+    }
+    t1 = get_cyclecounter();
+    cycles[i] = t1 - t0;
+  }
+  
+  qsort(cycles, NTESTS, sizeof(uint64_t), cmp_uint64_t);
+  print_median("gmp", cycles);
+  print_percentile_legend();
+  print_percentiles("gmp", cycles);
+}
+
 int main(void)
 {
   enable_cyclecounter();
-  bench();
-  disable_cyclecounter();
+  check_correctness();
+  
+  // bench();
+  printf("== Toom-3 乘法測試 ==\n");
+  bench_toom3();
+  printf("\n");
 
+  printf("== GMP 乘法測試 ==\n");
+  bench_gmp();
+
+  /*printf("==NTT 乘法測試 ==\n");
+  bench();*/
+
+  disable_cyclecounter();
   return 0;
 }

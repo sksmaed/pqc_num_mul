@@ -6,7 +6,13 @@ TARGET = bench
 CC  ?= gcc
 LD  := $(CC)
 
-SOURCES = hal/hal.c bench.c ntt_zetas.c ntt.S
+SOURCES = \
+    hal/hal.c \
+    bench.c \
+    toom3.c \
+    gmp_mul_benchmark.c \
+	ntt_zetas.c \
+	ntt.S
 
 CFLAGS := \
 	-Wall \
@@ -44,7 +50,7 @@ endif
 all: $(TARGET)
 
 $(TARGET): $(SOURCES)
-	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET)
+	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET) -lgmp
 
 clean:
 	-$(RM) -rf $(TARGET) *.d

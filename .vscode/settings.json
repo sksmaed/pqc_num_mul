@@ -1,0 +1,19 @@
+{
+    "files.associations": {
+        "compare": "c",
+        "inttypes.h": "c",
+        "constant.h": "c",
+        "omega_inv_table.h": "c",
+        "omega_table.h": "c",
+        "utils.h": "c",
+        "stdint.h": "c",
+        "stdio.h": "c",
+        "hal.h": "c",
+        "stddef.h": "c",
+        "stdbool.h": "c",
+        "mul.h": "c",
+        "fnt_utils.h": "c",
+        "toom_constansts.h": "c",
+        "toom_constants.h": "c"
+    }
+}
