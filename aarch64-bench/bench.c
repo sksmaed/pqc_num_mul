@@ -199,10 +199,6 @@ int main(void)
 {
   enable_cyclecounter();
   check_correctness();
-  /*if (!check_correctness()) {
-    printf("Aborting benchmark due to mismatch.\n");
-    return 1;
-  }*/
   
   // bench();
   printf("== Toom-3 乘法測試 ==\n");

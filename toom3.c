@@ -108,69 +108,81 @@ void karatsuba_mul64(const limb_t *a, const limb_t *b, uint32_t *res) {
     uint32_t *z2 = res + HALF;
     uint32_t z1[HALF] = {0};
 
-    limb_t a_sum[QUARTER] __attribute__((aligned(16)));
-    limb_t b_sum[QUARTER] __attribute__((aligned(16)));
+    limb_t a_sum[QUARTER];
+    limb_t b_sum[QUARTER];
+
+    uint16x8_t vec_u16_a, vec_u16_b;
+    uint32x4_t acc_lo, acc_hi, tmp_lo, tmp_hi;
+    uint32_t *res_ptr;
 
     // a_sum = a0 + a1, b_sum = b0 + b1
     for (size_t i = 0; i < QUARTER; i += 8) {
-        vst1q_u16(&a_sum[i], vaddq_u16(vld1q_u16(&a0[i]), vld1q_u16(&a1[i])));
-        vst1q_u16(&b_sum[i], vaddq_u16(vld1q_u16(&b0[i]), vld1q_u16(&b1[i])));
+        vec_u16_a = vaddq_u16(vld1q_u16(&a0[i]), vld1q_u16(&a1[i]));
+        vec_u16_b = vaddq_u16(vld1q_u16(&b0[i]), vld1q_u16(&b1[i]));
+        vst1q_u16(&a_sum[i], vec_u16_a);
+        vst1q_u16(&b_sum[i], vec_u16_b);
     }
 
-    // Inline schoolbook_32(a0, b0, z0)
+    // z0 = a0 * b0
     for (size_t i = 0; i < QUARTER; ++i) {
-        uint16x8_t a_vec = vdupq_n_u16(a0[i]);
+        vec_u16_a = vdupq_n_u16(a0[i]);
         for (size_t j = 0; j < QUARTER; j += 8) {
-            uint16x8_t b_vec = vld1q_u16(&b0[j]);
-            uint32_t *res_ptr = &z0[i + j];
+            vec_u16_b = vld1q_u16(&b0[j]);
+            res_ptr = &z0[i + j];
 
-            uint32x4_t acc = vmull_u16(vget_low_u16(a_vec), vget_low_u16(b_vec));
-            vst1q_u32(res_ptr, vaddq_u32(vld1q_u32(res_ptr), acc));
+            acc_lo = vmull_u16(vget_low_u16(vec_u16_a), vget_low_u16(vec_u16_b));
+            tmp_lo = vld1q_u32(res_ptr);
+            vst1q_u32(res_ptr, vaddq_u32(tmp_lo, acc_lo));
 
-            acc = vmull_u16(vget_high_u16(a_vec), vget_high_u16(b_vec));
-            vst1q_u32(res_ptr + 4, vaddq_u32(vld1q_u32(res_ptr + 4), acc));
+            acc_hi = vmull_u16(vget_high_u16(vec_u16_a), vget_high_u16(vec_u16_b));
+            tmp_hi = vld1q_u32(res_ptr + 4);
+            vst1q_u32(res_ptr + 4, vaddq_u32(tmp_hi, acc_hi));
         }
     }
 
-    // Inline schoolbook_32(a1, b1, z2)
+    // z2 = a1 * b1
     for (size_t i = 0; i < QUARTER; ++i) {
-        uint16x8_t a_vec = vdupq_n_u16(a1[i]);
+        vec_u16_a = vdupq_n_u16(a1[i]);
         for (size_t j = 0; j < QUARTER; j += 8) {
-            uint16x8_t b_vec = vld1q_u16(&b1[j]);
-            uint32_t *res_ptr = &z2[i + j];
+            vec_u16_b = vld1q_u16(&b1[j]);
+            res_ptr = &z2[i + j];
 
-            uint32x4_t acc = vmull_u16(vget_low_u16(a_vec), vget_low_u16(b_vec));
-            vst1q_u32(res_ptr, vaddq_u32(vld1q_u32(res_ptr), acc));
+            acc_lo = vmull_u16(vget_low_u16(vec_u16_a), vget_low_u16(vec_u16_b));
+            tmp_lo = vld1q_u32(res_ptr);
+            vst1q_u32(res_ptr, vaddq_u32(tmp_lo, acc_lo));
 
-            acc = vmull_u16(vget_high_u16(a_vec), vget_high_u16(b_vec));
-            vst1q_u32(res_ptr + 4, vaddq_u32(vld1q_u32(res_ptr + 4), acc));
+            acc_hi = vmull_u16(vget_high_u16(vec_u16_a), vget_high_u16(vec_u16_b));
+            tmp_hi = vld1q_u32(res_ptr + 4);
+            vst1q_u32(res_ptr + 4, vaddq_u32(tmp_hi, acc_hi));
         }
     }
 
-    // Inline schoolbook_32(a_sum, b_sum, z1)
+    // z1 = (a0+a1)*(b0+b1)
     for (size_t i = 0; i < QUARTER; ++i) {
-        uint16x8_t a_vec = vdupq_n_u16(a_sum[i]);
+        vec_u16_a = vdupq_n_u16(a_sum[i]);
         for (size_t j = 0; j < QUARTER; j += 8) {
-            uint16x8_t b_vec = vld1q_u16(&b_sum[j]);
-            uint32_t *res_ptr = &z1[i + j];
+            vec_u16_b = vld1q_u16(&b_sum[j]);
+            res_ptr = &z1[i + j];
 
-            uint32x4_t acc = vmull_u16(vget_low_u16(a_vec), vget_low_u16(b_vec));
-            vst1q_u32(res_ptr, vaddq_u32(vld1q_u32(res_ptr), acc));
+            acc_lo = vmull_u16(vget_low_u16(vec_u16_a), vget_low_u16(vec_u16_b));
+            tmp_lo = vld1q_u32(res_ptr);
+            vst1q_u32(res_ptr, vaddq_u32(tmp_lo, acc_lo));
 
-            acc = vmull_u16(vget_high_u16(a_vec), vget_high_u16(b_vec));
-            vst1q_u32(res_ptr + 4, vaddq_u32(vld1q_u32(res_ptr + 4), acc));
+            acc_hi = vmull_u16(vget_high_u16(vec_u16_a), vget_high_u16(vec_u16_b));
+            tmp_hi = vld1q_u32(res_ptr + 4);
+            vst1q_u32(res_ptr + 4, vaddq_u32(tmp_hi, acc_hi));
         }
     }
 
-    // z1 -= z0 + z2 → res[QUARTER + i] += z1[i] - z0[i] - z2[i]
+    // z1 = z1 - z0 - z2, accumulate to res[QUARTER + i]
     for (size_t i = 0; i < HALF; i += 4) {
-        uint32x4_t r_z1 = vld1q_u32(&z1[i]);
-        uint32x4_t r_z0 = vld1q_u32(&z0[i]);
-        uint32x4_t r_z2 = vld1q_u32(&z2[i]);
-        uint32x4_t acc  = vsubq_u32(r_z1, vaddq_u32(r_z0, r_z2));
+        acc_lo = vld1q_u32(&z1[i]);
+        tmp_lo = vld1q_u32(&z0[i]);
+        tmp_hi = vld1q_u32(&z2[i]);
+        acc_lo = vsubq_u32(acc_lo, vaddq_u32(tmp_lo, tmp_hi));
 
-        uint32x4_t r_out = vld1q_u32(&res[QUARTER + i]);
-        vst1q_u32(&res[QUARTER + i], vaddq_u32(r_out, acc));
+        tmp_lo = vld1q_u32(&res[QUARTER + i]);
+        vst1q_u32(&res[QUARTER + i], vaddq_u32(tmp_lo, acc_lo));
     }
 }
 
@@ -230,6 +242,8 @@ void interpolate_at_coeffs(
 ) {
     const uint32x4_t P_vec = vdupq_n_u32(P);
 
+    uint32x4_t acc, q, r, r_sub_p, mask;
+
     for (size_t limb = 0; limb < PROD_LIMBS; limb += 4) {
         // Load 5 evaluation results (4 limbs each)
         uint16x4_t w[NUM_EVALS];
@@ -238,19 +252,19 @@ void interpolate_at_coeffs(
 
         for (int i = 0; i < COEFFS; ++i) {
             // 32-bit accumulation to avoid overflow
-            uint32x4_t acc = vmull_n_u16(w[0], inv_mu[i][0]);
+            acc = vmull_n_u16(w[0], inv_mu[i][0]);
             for (int j = 1; j < NUM_EVALS; ++j)
                 acc = vmlal_n_u16(acc, w[j], inv_mu[i][j]);
-
-            // Barrett: r = acc % P
-            uint32x4_t q = vshrq_n_u32(vmulq_n_u32(acc, BARRETT_V), 16);
-            uint32x4_t r = vsubq_u32(acc, vmulq_n_u32(q, P));
+            
+            // Barrett reduciton
+            q = vshrq_n_u32(vmulq_n_u32(acc, BARRETT_V), 16);
+            r = vsubq_u32(acc, vmulq_n_u32(q, P));
 
             // if r >= P then r -= P
-            uint32x4_t r_sub_p = vsubq_u32(r, P_vec);
-            uint32x4_t mask = vcgeq_u32(r, P_vec);
+            r_sub_p = vsubq_u32(r, P_vec);
+            mask = vcgeq_u32(r, P_vec);
             r = vbslq_u32(mask, r_sub_p, r);
-
+            
             // Save result (narrow to 16-bit)
             vst1_u16(&coeffs[i][limb], vmovn_u32(r));
         }
