@@ -16,15 +16,16 @@ void gmp_mul(size_t n_bytes, const void *in1, const void *in2, void *out) {
     size_t n_limbs = n_bytes / sizeof(uint16_t);
 
     // 匯入：uint16_t 陣列 → mpz
-    mpz_import(a, n_limbs, 1, sizeof(uint16_t), 0, 0, in1);
-    mpz_import(b, n_limbs, 1, sizeof(uint16_t), 0, 0, in2);
+    mpz_import(a, n_limbs, -1, sizeof(uint16_t), 0, 0, in1);
+    mpz_import(b, n_limbs, -1, sizeof(uint16_t), 0, 0, in2);
 
     // 相乘
     mpz_mul(result, a, b);
 
     // 匯出為 uint16_t 陣列（最大長度 2N limbs）
+    memset(out, 0, sizeof(uint16_t) * 2 * n_limbs);
     size_t count;
-    mpz_export(out, &count, 1, sizeof(uint16_t), 0, 0, result);
+    mpz_export(out, &count, -1, sizeof(uint16_t), 0, 0, result);
 
     mpz_clear(a);
     mpz_clear(b);

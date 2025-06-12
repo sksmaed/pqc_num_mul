@@ -9,18 +9,18 @@
 #define P 12289
 
 uint64_t rand64_modp(void) {
-    return ((uint64_t)rand() << 32 | rand()) % P;
+    return ((uint64_t)rand() << 32 | rand()) % 10000;
 }
 
 int main() {
     srand((unsigned int)time(NULL));
 
-    printf("#ifndef TEST_DATA_2048x2_H\n#define TEST_DATA_2048x2_H\n\n#include <stdint.h>\n\n");
+    printf("#ifndef TEST_DATA_H\n#define TEST_DATA_H\n\n#include <stdint.h>\n\n");
 
     printf("static const uint16_t test_A[%d] = {\n    ", LIMB_LEN);
     for (int i = 0; i < LIMB_LEN; ++i) {
         if (i < DATA_LEN)
-            printf("%" PRIu64, rand64_modp());
+            printf("%" PRIu64, rand64_modp() + 1);
         else
             printf("0ULL");
 
@@ -32,7 +32,7 @@ int main() {
     printf("static const uint64_t test_B[%d] = {\n    ", LIMB_LEN);
     for (int i = 0; i < LIMB_LEN; ++i) {
         if (i < DATA_LEN)
-            printf("%" PRIu64, rand64_modp());
+            printf("%" PRIu64, rand64_modp() + 1);
         else
             printf("0ULL");
 
