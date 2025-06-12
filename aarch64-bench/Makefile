@@ -9,7 +9,7 @@ LD  := $(CC)
 SOURCES = \
     hal/hal.c \
     bench.c \
-    toom3.c \
+	toom4.c \
     gmp_mul_benchmark.c \
 	ntt_zetas.c \
 	ntt.S
@@ -18,7 +18,6 @@ CFLAGS := \
 	-Wall \
 	-Wextra \
 	-Werror=unused-result \
-	-Wpedantic \
 	-Werror \
 	-Wmissing-prototypes \
 	-Wshadow \
@@ -29,8 +28,8 @@ CFLAGS := \
 	-Wno-unused-command-line-argument \
 	-O3 \
 	-fomit-frame-pointer \
-	-std=c99 \
-	-pedantic \
+	-std=gnu99 \
+	-march=armv8-a+simd \
 	-Ihal \
 	-MMD \
 	$(CFLAGS)
